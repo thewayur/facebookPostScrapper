@@ -4,8 +4,12 @@
   "description": "",
   "main": "fbPastpostsScrapper.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node fbPastpostsScrapper.js"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Youssef",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^5.3.1"
+  }
 }
