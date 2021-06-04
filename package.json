@@ -5,11 +5,12 @@
   "main": "fbPastpostsScrapper.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node fbPastpostsScrapper.js"
+    "start": "node periodFacebookScrapper.js youm7 7"
   },
   "author": "Youssef",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^10.0.0",
     "puppeteer": "^5.3.1"
   }
 }

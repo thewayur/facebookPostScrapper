@@ -1,6 +1,8 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
-const calculateDate = require("./DateFormatter");
+const calculateDate = require("./DateFormatter.js").default;
+const dotenv = require("dotenv");
+dotenv.config();
 
 //Main Function
 (async () => {
@@ -33,8 +35,14 @@ const calculateDate = require("./DateFormatter");
     const browser = await puppeteer.launch({
       headless: false,
       slowMo: true,
+      args: ["--lang=en-US,en-GB,en"],
+      executablePath: process.env.CHROME_PATH,
     });
-    const page = await browser.newPage();
+    page = await browser.newPage();
+    await page.setExtraHTTPHeaders({
+      "Accept-Language": "en-US",
+    });
+
     await page.goto(target, {
       waitUntil: "networkidle0",
     });
@@ -54,12 +62,8 @@ const calculateDate = require("./DateFormatter");
 
       async function scrapData() {
         try {
-          window.scrollBy(0, window.innerHeight * 10);
-          function delay(time) {
-            return new Promise(function (resolve) {
-              setTimeout(resolve, time);
-            });
-          }
+          await window.scrollBy(0, window.innerHeight * 10);
+
           await delay(2000);
 
           class Post {
@@ -148,6 +152,11 @@ const calculateDate = require("./DateFormatter");
                 } else {
                   data.shares = "";
                 }
+                if (postTimestamp) {
+                  postTimestamp = postTimestamp.innerText;
+                } else {
+                  postTimestamp = "";
+                }
                 return data;
               } catch (error) {
                 console.log("scrap post error ===> ", error);
@@ -161,7 +170,7 @@ const calculateDate = require("./DateFormatter");
               this.postLikes.remove();
               this.postFooter.remove();
               this.postAuthor.remove();
-              this.postAuthorVerified=null;
+              this.postAuthorVerified = null;
               this.postTimestamp.remove();
               this.postShares.remove();
               this.postComments.remove();
@@ -184,15 +193,18 @@ const calculateDate = require("./DateFormatter");
               shares: mydata.shares,
             });
             console.log(posts);
-            var date = await calculateDate(mydata.timestamp);
-            console.log(date);
+            //console.log(mydata.date);
+            //var date = await calculateDate(mydata.timestamp);
+            //console.log(date);
             post.removepost();
-            if (date.normalize()!==targetDate.normalize()) await scrapData();
-            else {
-              return {
-                posts: posts,
-              };
-            }
+            //if (date.normalize()!==targetDate.normalize())  await scrapData();
+            // else {
+            //   return {
+            //     posts: posts,
+            //   };
+            // }
+            await scrapData();
+            return posts;
           } else {
             console.log("postList if no post found ==> ", posts);
             return {
@@ -203,14 +215,11 @@ const calculateDate = require("./DateFormatter");
           console.error("error from scrapDataFunction ==>", error);
         }
       }
-
       await scrapData();
-
-      return posts;
     });
 
     //storing the posts we scraped in a json file
-    storeDataInJSON("./pastposts.json", posts);
+    storeDataInJSON("./output/pastposts.json", posts);
 
     //closing the browser
     //await browser.close();
@@ -221,25 +230,4 @@ const calculateDate = require("./DateFormatter");
   }
 })();
 
-function delay(time) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, time);
-  });
-}
-
-//Storig data into json file
-const storeDataInJSON = async function (file, data) {
-  console.log(data);
-  return fs.writeFileSync(file, JSON.stringify(data), (err) => {
-    if (err) {
-      return err;
-    }
-    return;
-  });
-};
-
-function delay(time) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, time);
-  });
-}
+const scrapPost = () => {};
