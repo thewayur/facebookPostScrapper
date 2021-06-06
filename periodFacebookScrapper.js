@@ -5,9 +5,9 @@ dotenv.config();
 
 const WAIT_FOR_PAGE = 1000;
 const DELAY_INPUT = 1;
+let targetDate;
 
 (async () => {
-  const calculateDate = require("./DateFormatter");
   try {
     //taking arguments
     args = process.argv;
@@ -19,16 +19,15 @@ const DELAY_INPUT = 1;
     if (typeof parseInt(period) == "number" && period == parseInt(period)) {
       console.log(source);
       console.log(period);
-      let targetDate = new Date();
+      targetDate = new Date();
       targetDate.setDate(targetDate.getDate() - period);
-      var dd = String(targetDate.getDate()).padStart(2, "0");
-      var mm = String(targetDate.getMonth() + 1).padStart(2, "0");
+      var dd = String(targetDate.getDate());
+      var mm = String(targetDate.getMonth() + 1);
       var yyyy = targetDate.getFullYear();
       targetDate = mm + "/" + dd + "/" + yyyy;
       console.log("will scrap till " + targetDate);
     } else {
       console.log("please enter a valid numeric period of day as third arg");
-      delay(10);
       process.exit(1);
     }
     //starting Chrome
@@ -62,66 +61,212 @@ const DELAY_INPUT = 1;
     await page.goto(target);
     await delay(WAIT_FOR_PAGE);
 
-    let posts = await page.evaluate(async () => {
-      // let calculateDate = require("./DateFormatter.js");
+    let pastposts = await page.evaluate(async (targetDate) => {
+      let posts = [];
+
       var delay = (time) => {
         return new Promise(function (resolve) {
           setTimeout(resolve, time);
         });
       };
 
-      let scrap = (document) => {
-        class Post {
-          cosntructor(
-            author,
-            caption,
-            verified,
-            date ,
-            likes,
-            shares,
-            comments
-          ) {
-            this.author = author;
-            this.verified = verified;
-            this.date = date;
-            this.caption = caption;
-            this.likes = likes;
-            this.shares = shares;
-            this.comments = comments;
-          }
+      let datesEqual = (date1, date2) => {
+        temp1 = date1.split("/");
+        temp2 = date2.split("/");
+        eq = false;
+        if (
+          temp1[0] == temp2[0] &&
+          temp1[1] == temp2[1] &&
+          temp1[2] == temp2[2]
+        ) {
+          eq = true;
         }
+        return eq;
+      };
+
+      const calculateDate = (dateScrapped) => {
+        var dateCalculated = new Date();
+
+        dateWords = dateScrapped.split(" ");
+
+        if (dateScrapped.includes("now")) {
+          return dateCalculated.toLocaleString();
+        } else if (
+          dateScrapped.includes("min") ||
+          dateScrapped.includes("minute")
+        ) {
+          var mins = dateScrapped.substr(0, dateScrapped.indexOf(" "));
+          dateCalculated.setMinutes(dateCalculated.getMinutes() - mins);
+          return dateCalculated.toLocaleString();
+        } else if (
+          dateScrapped.includes("hr") ||
+          dateScrapped.includes("hour")
+        ) {
+          var hours = dateScrapped.substr(0, dateScrapped.indexOf(" "));
+          dateCalculated.setHours(dateCalculated.getHours() - hours);
+          return dateCalculated.toLocaleString();
+        } else if (dateScrapped.includes("Yesterday")) {
+          //  Yesterday at 11:48 AM
+          dateCalculated.setHours(dateCalculated.getHours() - 24);
+          dateCalculated.setHours(0);
+          dateCalculated.setMinutes(0);
+          dateCalculated.setSeconds(0);
+          var date = dateScrapped.split(" ");
+          var hours = date[2].split(":")[0];
+          var mins = date[2].split(":")[1];
+
+          dateCalculated.setHours(hours);
+          dateCalculated.setMinutes(mins);
+
+          return dateCalculated.toLocaleString();
+        } else if (dateWords.length === 5) {
+          //  17 December 2020 at 11:24
+
+          const months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+
+          const shortMonths = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ];
+
+          var date = dateScrapped.split(" ");
+          var day = date[0];
+          var month = date[1];
+          var year = date[2];
+          var hours = date[4].split(":")[0];
+          var mins = date[4].split(":")[1];
+
+          var result = new Date(
+            year,
+            month.length > 3
+              ? months.indexOf(month)
+              : shortMonths.indexOf(month),
+            day,
+            hours,
+            mins
+          );
+
+          return result.toLocaleString();
+        } else {
+          //  March 31 at 4:01 PM
+
+          const months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+
+          const shortMonths = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ];
+
+          var date = dateScrapped.split(" ");
+          var day = date[0];
+          var month = date[1];
+          if (date[3]) {
+            var hours = date[3].split(":")[0];
+            var mins = date[3].split(":")[1];
+          } else {
+            var hours = "0";
+            var mins = "0";
+          }
+
+          var result = new Date(
+            dateCalculated.getFullYear(),
+            month.length > 3
+              ? months.indexOf(month)
+              : shortMonths.indexOf(month),
+            day,
+            hours,
+            mins
+          );
+
+          return result.toLocaleString();
+        }
+      };
+
+      let scrap = (count) => {
+        console.log(count);
         //Selecting a post
-        let postContainer = document.querySelector("div.story_body_container");
+        let article = document.querySelectorAll("article")[count];
+
+        let postContainer = article.querySelector(
+          "div.story_body_container"
+        );
         // console.log("the post");
         // console.log(postContainer);
 
         //scraping post Author
         postAuthor = postContainer.querySelector(
-          "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3 > strong > span > a"
+          "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3 > :nth-child(1) > :nth-child(1)"
         ).innerText;
-        console.log("Author");
-        console.log(postAuthor);
+        // console.log("Author");
+        // console.log(postAuthor);
 
         //scraping post Varification status
         postVerified = postContainer.querySelector(
-          "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3 > strong > span > span"
+          "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3> :nth-child(1)>:nth-child(2)"
+        );
+        postVerifiedlive = postContainer.querySelector(
+          "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3>:nth-child(1)>:nth-child(1)>:nth-child(2)"
         );
         let isverified;
-        if (postVerified) {
+        if (postVerified || postVerifiedlive) {
           isverified = true;
         } else {
           isverified = false;
         }
-        console.log("verification status");
-        console.log(isverified);
+        // console.log("verification status");
+        // console.log(isverified);
 
         //scraping post Date
         postDate = postContainer.querySelector("abbr").innerText;
-        console.log("date");
-        console.log(postDate);
         postDate = calculateDate(postDate);
-        console.log("date");
-        console.log(postDate);
+        // console.log("date");
+        // console.log(postDate);
 
         //scrapping post caption
         postCaption = postContainer.querySelector(
@@ -133,13 +278,11 @@ const DELAY_INPUT = 1;
         } else {
           postCaption = "";
         }
-        console.log("caption");
-        console.log(postCaption);
+        // console.log("caption");
+        // console.log(postCaption);
 
         //selecting post footer
-        postFooter = document.querySelector(
-          "footer"
-        );
+        postFooter = article.querySelector("footer");
         // console.log("footer");
         // console.log(postFooter);
 
@@ -153,8 +296,8 @@ const DELAY_INPUT = 1;
         } else {
           postLikes = "";
         }
-        console.log("Likes");
-        console.log(postLikes);
+        // console.log("Likes");
+        // console.log(postLikes);
 
         //scrapping number of comments
         postComments = postFooter.querySelector(
@@ -166,8 +309,8 @@ const DELAY_INPUT = 1;
         } else {
           postComments = "";
         }
-        console.log("Comments");
-        console.log(postComments);
+        // console.log("Comments");
+        // console.log(postComments);
 
         //scrapping number of shares
         postShares = postFooter.querySelector(
@@ -179,49 +322,60 @@ const DELAY_INPUT = 1;
         } else {
           postShares = "";
         }
-        console.log("shares");
-        console.log(postShares);
+        // console.log("shares");
+        // console.log(postShares);
 
-        post = Post(postAuthor, isverified, postDate, postCaption,postLikes,postComments,postShares);
+        post = {
+          id: count,
+          author: postAuthor,
+          verified: isverified,
+          date: postDate,
+          caption: postCaption,
+          like: postLikes,
+          comments: postComments,
+          shares: postShares,
+        };
         return post;
       };
-
-      let postArray = [],
-        resume;
-      window.scrollBy(0, window.innerHeight * 10);
-      await delay(1000);
-      window.scrollBy(0, window.innerHeight);
-      await delay(1000);
-      let count = 1;
-      do {
-        let post;
-        console.log("iteration " + count++);
+      try {
+        let resume;
+        window.scrollBy(0, window.innerHeight * 10);
+        await delay(1000);
         window.scrollBy(0, window.innerHeight);
-        setTimeout((post = await scrap(document)), 0);
-        setTimeout(console.log(post), 0);
-        setTimeout(() => {
-          //date = calculateDate(post.date);
-          date = post.date;
-          console.log(date);
-          if (targetDate === date) {
+        await delay(1000);
+        let count = 0;
+        do {
+          console.log("iteration" + count);
+          post = await scrap(count);
+          date = post.date.split(",")[0];
+          console.log(targetDate + "..." + date);
+          console.log(post);
+          if (!datesEqual(targetDate, date)) {
             resume = true;
           } else {
             resume = false;
           }
-        }, 0);
-        posts.push(post);
-      } while (resume);
-      return postArray;
-    });
-    console.log(posts);
+          posts.push(post);
+          window.scrollBy(0, window.innerHeight * 5);
+          await delay(500);
+          count++;
+        } while (resume);
+      } catch (error) {
+        console.error();
+      }
+      return posts;
+    }, targetDate);
+    posts = pastposts;
+    storeDataInJSON("./output/pastposts.json", posts);
     //closing the browser
-    await browser.close();
+    //await browser.close();
   } catch (error) {
     console.error(
       "--------------------------\nCatched error \n" +
         error.stack +
         "\n--------------------------------"
     );
+    storeDataInJSON("./output/pastposts.json", posts);
     //console.log("Catched error ", error.stack);
   }
 })();
@@ -241,4 +395,14 @@ var delay = (time) => {
   return new Promise(function (resolve) {
     setTimeout(resolve, time);
   });
+};
+
+let datesEqual = (date1, date2) => {
+  temp1 = date1.split("/");
+  temp2 = date2.split("/");
+  eq = false;
+  if (temp1[0] == temp2[0] && temp1[1] == temp2[1] && temp1[2] == temp2[2]) {
+    eq = true;
+  }
+  return eq;
 };
