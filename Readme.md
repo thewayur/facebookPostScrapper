@@ -40,30 +40,34 @@
     5. learned more about asyncronous js and callbacks and js promises
 
 ## Exclusive features
-    * scrap posts and feature of a fb page
-    * till a specified date 
-    * for a specified source  
+    *scrap posts and feature of a fb page
+    *till a specified date 
+    *for a specified source  
 
 ## Note
-    * Only scrap public pages posts to avoid violating fbs rules and get your account banned also it is unethical to scrap private information and you could face harsh legal actions. use at your own risk. I only used the script to scrap news from facebook pages of news agencies in Egypt.
+    *Only scrap public pages posts to avoid violating fbs rules and get your account banned also it is unethical to scrap private information and you could face harsh legal actions. use at your own risk. I only used the script to scrap news from facebook pages of news agencies in Egypt.
 
-    * You need node and npm to use this script 
+    *You need node and npm to use this script 
 
 ## Installation
     1. you have to create a .env file in the directory of the script with the following
+
         ```bash 
         FB_LOGIN="https://www.facebook.com/"
         FB_USER="Your facebook account email"
         FB_PW="your facebook account password"
         ```
     2. to install all the dependencies needed
-    ```bash
-    npm install 
-    ```
+
+        ```bash
+            npm install 
+        ```
     3. run by entering
-    ```bash 
-    node periodFacebookScrapper.js source periodtoscrap
-    ```
+    
+        ```bash 
+            node periodFacebookScrapper.js source periodtoscrap
+        ```
+
 ## Credits 
     Engineer Amira {Client} 
     Engineer Ahmed {Bahaa partner in this project}
