@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const dotenv = require("dotenv");
+const { resolve } = require("path");
 dotenv.config();
 
 const WAIT_FOR_PAGE = 1000;
@@ -32,8 +33,7 @@ let targetDate;
     }
     //starting Chrome
     const browser = await puppeteer.launch({
-      executablePath: process.env.CHROME_PATH,
-      headless: false,
+      headless: true,
     });
     const context = browser.defaultBrowserContext();
     await context.overridePermissions(process.env.FB_LOGIN, ["notifications"]);
@@ -229,13 +229,11 @@ let targetDate;
       };
 
       let scrap = (count) => {
-        console.log(count);
+        //console.log(count);
         //Selecting a post
         let article = document.querySelectorAll("article")[count];
 
-        let postContainer = article.querySelector(
-          "div.story_body_container"
-        );
+        let postContainer = article.querySelector("div.story_body_container");
         // console.log("the post");
         // console.log(postContainer);
 
@@ -345,11 +343,11 @@ let targetDate;
         await delay(1000);
         let count = 0;
         do {
-          console.log("iteration" + count);
+          //console.log("iteration" + count);
           post = await scrap(count);
           date = post.date.split(",")[0];
           console.log(targetDate + "..." + date);
-          console.log(post);
+          //console.log(post);
           if (!datesEqual(targetDate, date)) {
             resume = true;
           } else {
@@ -366,17 +364,44 @@ let targetDate;
       return posts;
     }, targetDate);
     posts = pastposts;
-    storeDataInJSON("./output/pastposts.json", posts);
+    dates2 = targetDate.split("/");
+
+    // directory path
+    const dir = "./output/" + source;
+    try{
+      // create new directory
+      fs.mkdir(dir, (err) => {
+        console.log("a new Directory was created for output "+dir);
+      });
+    }catch(error){
+      if(error.errno==-4075){
+
+      }else{
+        console.error();
+      }
+    }
+
+    storeDataInJSON(
+        dir +
+        "/" +
+        source +
+        "_" +
+        dates2[0] +
+        "-" +
+        dates2[1] +
+        "-" +
+        dates2[2] +
+        ".json",
+      posts
+    );
     //closing the browser
-    //await browser.close();
+    await browser.close();
   } catch (error) {
     console.error(
-      "--------------------------\nCatched error \n" +
-        error.stack +
+      "--------------------------\n" +
+        "some Error occured" + //error.stack +
         "\n--------------------------------"
     );
-    storeDataInJSON("./output/pastposts.json", posts);
-    //console.log("Catched error ", error.stack);
   }
 })();
 
@@ -397,12 +422,12 @@ var delay = (time) => {
   });
 };
 
-let datesEqual = (date1, date2) => {
-  temp1 = date1.split("/");
-  temp2 = date2.split("/");
-  eq = false;
-  if (temp1[0] == temp2[0] && temp1[1] == temp2[1] && temp1[2] == temp2[2]) {
-    eq = true;
-  }
-  return eq;
-};
+// let datesEqual = (date1, date2) => {
+//   temp1 = date1.split("/");
+//   temp2 = date2.split("/");
+//   eq = false;
+//   if (temp1[0] == temp2[0] && temp1[1] == temp2[1] && temp1[2] == temp2[2]) {
+//     eq = true;
+//   }
+//   return eq;
+// };
