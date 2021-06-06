@@ -66,8 +66,8 @@ node periodFacebookScrapper.js source periodtoscrap
 ```
 
 ## Credits 
-+ Engineer Amira {Client} 
-+ Engineer Ahmed {Bahaa partner in this project}
++ Engineer Amira
++ Engineer Ahmed Bahaa
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
