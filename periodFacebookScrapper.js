@@ -70,20 +70,32 @@ let targetDate;
         });
       };
 
-      let dateLessthanorEqual = (date1, date2) => {
-        temp1 = date1.split("/");
-        temp2 = date2.split("/");
-        eq = false;
+      let dateGreaterthanorEqual = (date, targetdate) => {
+        try{
+          temp1 = targetdate.split("/");
+        //console.log("target date", temp1);
+        temp2 = date.split("/");
+        //console.log("post date", temp2);
+        let eq;
         if (
-          temp1[0] == temp2[0] &&
-          temp1[1] <= temp2[1] &&
-          temp1[2] == temp2[2]
+          //months are the same
+          parseInt(temp2[0]) == parseInt(temp1[0]) &&
+          //post date day is greater than target date day
+          parseInt(temp2[1]) >= parseInt(temp1[1]) &&
+          //years are the same
+          parseInt(temp2[2]) == parseInt(temp1[2])
         ) {
           eq = true;
+        } else {
+          console.log("post date is beyond target date");
+          eq = false;
         }
         return eq;
+        }catch(error){
+          console.error("error while comparing dates",error.message,error.stack);
+          throw error;
+        }
       };
-
       const calculateDate = (dateScrapped) => {
         var dateCalculated = new Date();
 
@@ -229,135 +241,142 @@ let targetDate;
       };
 
       let scrap = (count) => {
-        //console.log(count);
-        //Selecting a post
-        let article = document.querySelectorAll("article")[count];
+        try {
+          //console.log(count);
+          //Selecting a post
+          let article = document.querySelectorAll("article")[count];
 
-        let postContainer = article.querySelector("div.story_body_container");
-        // console.log("the post");
-        // console.log(postContainer);
+          let postContainer = article.querySelector("div.story_body_container");
+          // console.log("the post");
+          // console.log(postContainer);
 
-        //scraping post Author
-        postAuthor = postContainer.querySelector(
-          "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3 > :nth-child(1) > :nth-child(1)"
-        ).innerText;
-        // console.log("Author");
-        // console.log(postAuthor);
+          //scraping post Author
+          postAuthor = postContainer.querySelector(
+            "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3 > :nth-child(1) > :nth-child(1)"
+          ).innerText;
+          // console.log("Author");
+          // console.log(postAuthor);
 
-        //scraping post Varification status
-        postVerified = postContainer.querySelector(
-          "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3> :nth-child(1)>:nth-child(2)"
-        );
-        postVerifiedlive = postContainer.querySelector(
-          "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3>:nth-child(1)>:nth-child(1)>:nth-child(2)"
-        );
-        let isverified;
-        if (postVerified || postVerifiedlive) {
-          isverified = true;
-        } else {
-          isverified = false;
-        }
-        // console.log("verification status");
-        // console.log(isverified);
-
-        //scraping post Date
-        postDate = postContainer.querySelector("abbr").innerText;
-        postDate = calculateDate(postDate);
-        // console.log("date");
-        // console.log(postDate);
-
-        //scrapping post caption
-        postCaption = postContainer.querySelector(
-          "div._5rgt._5nk5._5wnf._5msi > div > span > p"
-        );
-
-        if (postCaption) {
-          postCaption = postCaption.innerText.trim();
-        } else {
-          postCaption = "";
-        }
-        // console.log("caption");
-        // console.log(postCaption);
-
-        //selecting post footer
-        postFooter = article.querySelector("footer");
-        // console.log("footer");
-        // console.log(postFooter);
-
-        //scrapping number of likes
-        postLikes = postFooter.querySelector(
-          "div > div._34qc._3hxn._3myz._4b45 > a > div > div._1w1k > div"
-        );
-
-        if (postLikes) {
-          postLikes = postLikes.innerText.trim();
-          if (postLikes.contains("and")) {
-            let temp = postLikes.split("and");
-            postLikes = temp[1].trim();
-            temp = postLikes.split[" "];
-            postLikes = temp[0];
-          } else if (postLikes.contains(" ")) {
-            postLikes = postLikes.split(" ")[0];
+          //scraping post Varification status
+          postVerified = postContainer.querySelector(
+            "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3> :nth-child(1)>:nth-child(2)"
+          );
+          postVerifiedlive = postContainer.querySelector(
+            "header > div._4g34._5i2i._52we > div > div > div._4g34 > h3>:nth-child(1)>:nth-child(1)>:nth-child(2)"
+          );
+          let isverified;
+          if (postVerified || postVerifiedlive) {
+            isverified = true;
+          } else {
+            isverified = false;
           }
-        } else {
-          postLikes = "";
-        }
-        // console.log("Likes");
-        // console.log(postLikes);
+          // console.log("verification status");
+          // console.log(isverified);
 
-        //scrapping number of comments
-        postComments = postFooter.querySelector(
-          "div > div._34qc._3hxn._3myz._4b45 > a > div >div._1fnt> span:nth-child(1)"
-        );
+          //scraping post Date
+          postDate = postContainer.querySelector("abbr").innerText;
+          postDate = calculateDate(postDate);
+          // console.log("date");
+          // console.log(postDate);
 
-        if (postComments) {
-          postComments = postComments.innerText.trim();
-          if (postComments.contains("and")) {
-            let temp = postComments.split("and");
-            postComments = temp[1].trim();
-            temp = postComments.split[" "];
-            postComments = temp[0];
-          } else if (postComments.contains(" ")) {
-            postComments = postComments.split(" ")[0];
+          //scrapping post caption
+          postCaption = postContainer.querySelector(
+            "div._5rgt._5nk5._5wnf._5msi > div > span > p"
+          );
+
+          if (postCaption) {
+            postCaption = postCaption.innerText.trim();
+          } else {
+            postCaption = "";
           }
-        } else {
-          postComments = "";
-        }
-        // console.log("Comments");
-        // console.log(postComments);
+          // console.log("caption");
+          // console.log(postCaption);
 
-        //scrapping number of shares
-        postShares = postFooter.querySelector(
-          "div > div._34qc._3hxn._3myz._4b45 > a > div >div._1fnt> span:nth-child(2)"
-        );
+          //selecting post footer
+          postFooter = article.querySelector("footer");
+          // console.log("footer");
+          // console.log(postFooter);
 
-        if (postShares) {
-          postShares = postShares.innerText.trim();
-          if (postShares.contains("and")) {
-            let temp = postShares.split("and");
-            postShares = temp[1].trim();
-            temp = postShares.split[" "];
-            postShares = temp[0];
-          } else if (postShares.contains(" ")) {
-            postShares = postShares.split(" ")[0];
+          //scrapping number of likes
+          postLikes = postFooter.querySelector(
+            "div > div._34qc._3hxn._3myz._4b45 > a > div > div._1w1k > div"
+          );
+
+          if (postLikes) {
+            postLikes = postLikes.innerText.trim();
+            console.log(postLikes);
+            if (postLikes.contains("and")) {
+              let temp = postLikes.split("and");
+              postLikes = temp[1].trim();
+              temp = postLikes.split(" "); 
+              postLikes = temp[0].trim();
+            } else if (postLikes.contains(" ")) {
+              postLikes = postLikes.split(" ")[0];
+            }
+          } else {
+            postLikes = "";
           }
-        } else {
-          postShares = "";
-        }
-        // console.log("shares");
-        // console.log(postShares);
+          // console.log("Likes");
+          // console.log(postLikes);
 
-        post = {
-          id: count,
-          author: postAuthor,
-          verified: isverified,
-          date: postDate,
-          caption: postCaption,
-          likes: postLikes,
-          comments: postComments,
-          shares: postShares,
-        };
-        return post;
+          //scrapping number of comments
+          postComments = postFooter.querySelector(
+            "div > div._34qc._3hxn._3myz._4b45 > a > div >div._1fnt> span:nth-child(1)"
+          );
+
+          if (postComments) {
+            postComments = postComments.innerText.trim();
+            console.log(postComments);
+            if (postComments.contains("and")) {
+              let temp = postComments.split("and");
+              postComments = temp[1].trim();
+              temp = postComments.split(" ");
+              postComments = temp[0].trim();
+            } else if (postComments.contains(" ")) {
+              postComments = postComments.split(" ")[0];
+            }
+          } else {
+            postComments = "";
+          }
+          // console.log("Comments");
+          // console.log(postComments);
+
+          //scrapping number of shares
+          postShares = postFooter.querySelector(
+            "div > div._34qc._3hxn._3myz._4b45 > a > div >div._1fnt> span:nth-child(2)"
+          );
+
+          if (postShares) {
+            postShares = postShares.innerText.trim();
+            console.log(postShares);
+            if (postShares.contains("and")) {
+              let temp = postShares.split("and");
+              postShares = temp[1].trim();
+              temp = postShares.split(" ");
+              postShares = temp[0].trim();
+            } else if (postShares.contains(" ")) {
+              postShares = postShares.split(" ")[0];
+            }
+          } else {
+            postShares = "";
+          }
+          // console.log("shares");
+          // console.log(postShares);
+
+          post = {
+            id: count,
+            author: postAuthor,
+            verified: isverified,
+            date: postDate,
+            caption: postCaption,
+            likes: postLikes,
+            comments: postComments,
+            shares: postShares,
+          };
+          return post;
+        } catch (error) {
+          console.error("error while scrapping", error.stack);
+        }
       };
       try {
         let resume;
@@ -370,21 +389,17 @@ let targetDate;
           //console.log("iteration" + count);
           post = await scrap(count);
           date = post.date.split(",")[0];
-          console.log(targetDate + "..." + date);
+          //console.log(targetDate + "..." + date);
           //console.log(post);
-          if (dateLessthanorEqual(targetDate, date)) {
+          if (dateGreaterthanorEqual(date, targetDate)) {
             resume = true;
+            posts.push(post);
+            window.scrollBy(0, window.innerHeight * 5);
+            await delay(500);
+            count++;
           } else {
             resume = false;
           }
-          posts.push(post);
-          window.scrollBy(0, window.innerHeight * 5);
-          await delay(500);
-          count++;
-
-          // process.on('exit',()=>{
-          //   storeDataInJSON("notcomplete.json",posts);
-          // });
         } while (resume);
       } catch (error) {
         console.error();
@@ -407,26 +422,25 @@ let targetDate;
         console.error();
       }
     }
-
-    storeDataInJSON(
+    savingName =
       dir +
-        "/" +
-        source +
-        "_" +
-        dates2[0] +
-        "-" +
-        dates2[1] +
-        "-" +
-        dates2[2] +
-        ".json",
-      posts
-    );
+      "/" +
+      source +
+      "_" +
+      dates2[0] +
+      "-" +
+      dates2[1] +
+      "-" +
+      dates2[2] +
+      ".json";
+    await storeDataInJSON(savingName, posts);
+    console.log("saved scraps in " + savingName);
     //closing the browser
-    await browser.close();
+    //await browser.close();
   } catch (error) {
     console.error(
       "--------------------------\n" +
-        "some Error occured" + //error.stack +
+        "some Error occured" + error.stack +
         "\n--------------------------------"
     );
   }
@@ -434,7 +448,7 @@ let targetDate;
 
 //Storig data into json file
 const storeDataInJSON = async (file, data) => {
-  console.log(data);
+  //console.log(data);
   return fs.writeFileSync(file, JSON.stringify(data), (err) => {
     if (err) {
       return err;
