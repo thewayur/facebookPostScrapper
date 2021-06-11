@@ -33,7 +33,7 @@ let targetDate;
     }
     //starting Chrome
     const browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
     });
     const context = browser.defaultBrowserContext();
     await context.overridePermissions(process.env.FB_LOGIN, ["notifications"]);
@@ -436,7 +436,7 @@ let targetDate;
     await storeDataInJSON(savingName, posts);
     console.log("saved scraps in " + savingName);
     //closing the browser
-    //await browser.close();
+    await browser.close();
   } catch (error) {
     console.error(
       "--------------------------\n" +
