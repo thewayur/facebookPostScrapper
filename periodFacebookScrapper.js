@@ -1,11 +1,11 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const dotenv = require("dotenv");
-const { resolve } = require("path");
 dotenv.config();
 
-const WAIT_FOR_PAGE = 1000;
-const DELAY_INPUT = 1;
+global.scrapspeed = 200;
+const WAIT_FOR_PAGE = 500;
+const DELAY_INPUT = 0;
 let targetDate;
 
 (async () => {
@@ -33,7 +33,7 @@ let targetDate;
     }
     //starting Chrome
     const browser = await puppeteer.launch({
-      headless: true,
+      headless: false,
     });
     const context = browser.defaultBrowserContext();
     await context.overridePermissions(process.env.FB_LOGIN, ["notifications"]);
@@ -71,28 +71,32 @@ let targetDate;
       };
 
       let dateGreaterthanorEqual = (date, targetdate) => {
-        try{
+        try {
           temp1 = targetdate.split("/");
-        //console.log("target date", temp1);
-        temp2 = date.split("/");
-        //console.log("post date", temp2);
-        let eq;
-        if (
-          //months are the same
-          parseInt(temp2[0]) == parseInt(temp1[0]) &&
-          //post date day is greater than target date day
-          parseInt(temp2[1]) >= parseInt(temp1[1]) &&
-          //years are the same
-          parseInt(temp2[2]) == parseInt(temp1[2])
-        ) {
-          eq = true;
-        } else {
-          console.log("reached target date");
-          eq = false;
-        }
-        return eq;
-        }catch(error){
-          console.error("error while comparing dates",error.message,error.stack);
+          //console.log("target date", temp1);
+          temp2 = date.split("/");
+          //console.log("post date", temp2);
+          let eq;
+          if (
+            //months are the same
+            parseInt(temp2[0]) == parseInt(temp1[0]) &&
+            //post date day is greater than target date day
+            parseInt(temp2[1]) >= parseInt(temp1[1]) &&
+            //years are the same
+            parseInt(temp2[2]) == parseInt(temp1[2])
+          ) {
+            eq = true;
+          } else {
+            console.log("reached target date");
+            eq = false;
+          }
+          return eq;
+        } catch (error) {
+          console.error(
+            "error while comparing dates",
+            error.message,
+            error.stack
+          );
           throw error;
         }
       };
@@ -307,7 +311,7 @@ let targetDate;
             if (postLikes.contains("and")) {
               let temp = postLikes.split("and");
               postLikes = temp[1].trim();
-              temp = postLikes.split(" "); 
+              temp = postLikes.split(" ");
               postLikes = temp[0].trim();
             } else if (postLikes.contains(" ")) {
               postLikes = postLikes.split(" ")[0];
@@ -370,6 +374,7 @@ let targetDate;
             comments: postComments,
             shares: postShares,
           };
+          console.log(post);
           return post;
         } catch (error) {
           console.error("error while scrapping", error.stack);
@@ -391,8 +396,8 @@ let targetDate;
           if (dateGreaterthanorEqual(date, targetDate)) {
             resume = true;
             posts.push(post);
-            window.scrollBy(0, window.innerHeight * 5);
-            await delay(500);
+            window.scrollBy(0, window.innerHeight*5);
+            await delay(scrapspeed);
             count++;
           } else {
             resume = false;
@@ -409,11 +414,17 @@ let targetDate;
     // directory path
     const dir = "./output/" + source;
     try {
-      // create new directory
-      fs.mkdir(dir);
-    } catch (error) {
-      console.error(error);
+      // first check if directory already exists
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir);
+        console.log("Directory is created.");
+      } else {
+        console.log("Directory already exists.");
+      }
+    } catch (err) {
+      console.log(err);
     }
+
     savingName =
       dir +
       "/" +
@@ -428,11 +439,12 @@ let targetDate;
     await storeDataInJSON(savingName, posts);
     console.log("saved scraps in " + savingName);
     //closing the browser
-    await browser.close();
+    //await browser.close();
   } catch (error) {
     console.error(
       "--------------------------\n" +
-        "some Error occured" + error.stack +
+        "some Error occured" +
+        error.stack +
         "\n--------------------------------"
     );
   }
