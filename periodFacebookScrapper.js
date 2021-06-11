@@ -33,7 +33,7 @@ let targetDate;
     }
     //starting Chrome
     const browser = await puppeteer.launch({
-      headless: true,
+      headless: false,
     });
     const context = browser.defaultBrowserContext();
     await context.overridePermissions(process.env.FB_LOGIN, ["notifications"]);
@@ -70,13 +70,13 @@ let targetDate;
         });
       };
 
-      let datesEqual = (date1, date2) => {
+      let dateLessthanorEqual = (date1, date2) => {
         temp1 = date1.split("/");
         temp2 = date2.split("/");
         eq = false;
         if (
           temp1[0] == temp2[0] &&
-          temp1[1] == temp2[1] &&
+          temp1[1] <= temp2[1] &&
           temp1[2] == temp2[2]
         ) {
           eq = true;
@@ -290,7 +290,15 @@ let targetDate;
         );
 
         if (postLikes) {
-          postLikes = postLikes.innerText.split(" ")[0];
+          postLikes = postLikes.innerText.trim();
+          if (postLikes.contains("and")) {
+            let temp = postLikes.split("and");
+            postLikes = temp[1].trim();
+            temp = postLikes.split[" "];
+            postLikes = temp[0];
+          } else if (postLikes.contains(" ")) {
+            postLikes = postLikes.split(" ")[0];
+          }
         } else {
           postLikes = "";
         }
@@ -303,7 +311,15 @@ let targetDate;
         );
 
         if (postComments) {
-          postComments = postComments.innerText.split(" ")[0];
+          postComments = postComments.innerText.trim();
+          if (postComments.contains("and")) {
+            let temp = postComments.split("and");
+            postComments = temp[1].trim();
+            temp = postComments.split[" "];
+            postComments = temp[0];
+          } else if (postComments.contains(" ")) {
+            postComments = postComments.split(" ")[0];
+          }
         } else {
           postComments = "";
         }
@@ -316,7 +332,15 @@ let targetDate;
         );
 
         if (postShares) {
-          postShares = postShares.innerText.split(" ")[0];
+          postShares = postShares.innerText.trim();
+          if (postShares.contains("and")) {
+            let temp = postShares.split("and");
+            postShares = temp[1].trim();
+            temp = postShares.split[" "];
+            postShares = temp[0];
+          } else if (postShares.contains(" ")) {
+            postShares = postShares.split(" ")[0];
+          }
         } else {
           postShares = "";
         }
@@ -329,7 +353,7 @@ let targetDate;
           verified: isverified,
           date: postDate,
           caption: postCaption,
-          like: postLikes,
+          likes: postLikes,
           comments: postComments,
           shares: postShares,
         };
@@ -348,7 +372,7 @@ let targetDate;
           date = post.date.split(",")[0];
           console.log(targetDate + "..." + date);
           //console.log(post);
-          if (!datesEqual(targetDate, date)) {
+          if (dateLessthanorEqual(targetDate, date)) {
             resume = true;
           } else {
             resume = false;
@@ -357,6 +381,10 @@ let targetDate;
           window.scrollBy(0, window.innerHeight * 5);
           await delay(500);
           count++;
+
+          // process.on('exit',()=>{
+          //   storeDataInJSON("notcomplete.json",posts);
+          // });
         } while (resume);
       } catch (error) {
         console.error();
@@ -368,21 +396,20 @@ let targetDate;
 
     // directory path
     const dir = "./output/" + source;
-    try{
+    try {
       // create new directory
       fs.mkdir(dir, (err) => {
-        console.log("a new Directory was created for output "+dir);
+        console.log("a new Directory was created for output " + dir);
       });
-    }catch(error){
-      if(error.errno==-4075){
-
-      }else{
+    } catch (error) {
+      if (error.errno == -4075) {
+      } else {
         console.error();
       }
     }
 
     storeDataInJSON(
-        dir +
+      dir +
         "/" +
         source +
         "_" +
