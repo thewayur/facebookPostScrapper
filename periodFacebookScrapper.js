@@ -87,7 +87,7 @@ let targetDate;
         ) {
           eq = true;
         } else {
-          console.log("post date is beyond target date");
+          console.log("reached target date");
           eq = false;
         }
         return eq;
@@ -304,7 +304,6 @@ let targetDate;
 
           if (postLikes) {
             postLikes = postLikes.innerText.trim();
-            console.log(postLikes);
             if (postLikes.contains("and")) {
               let temp = postLikes.split("and");
               postLikes = temp[1].trim();
@@ -326,7 +325,6 @@ let targetDate;
 
           if (postComments) {
             postComments = postComments.innerText.trim();
-            console.log(postComments);
             if (postComments.contains("and")) {
               let temp = postComments.split("and");
               postComments = temp[1].trim();
@@ -348,7 +346,6 @@ let targetDate;
 
           if (postShares) {
             postShares = postShares.innerText.trim();
-            console.log(postShares);
             if (postShares.contains("and")) {
               let temp = postShares.split("and");
               postShares = temp[1].trim();
@@ -413,14 +410,9 @@ let targetDate;
     const dir = "./output/" + source;
     try {
       // create new directory
-      fs.mkdir(dir, (err) => {
-        console.log("a new Directory was created for output " + dir);
-      });
+      fs.mkdir(dir);
     } catch (error) {
-      if (error.errno == -4075) {
-      } else {
-        console.error();
-      }
+      console.error(error);
     }
     savingName =
       dir +
