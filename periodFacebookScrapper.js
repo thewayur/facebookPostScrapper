@@ -15,6 +15,7 @@ let targetDate;
     let source = args[2];
     //period to scrap to in days
     let period = args[3];
+    
     //calculating the date we will scrap to
     if (typeof parseInt(period) == "number" && period == parseInt(period)) {
       console.log(source);
@@ -33,7 +34,7 @@ let targetDate;
 
     //starting Chrome
     const browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
     });
     const context = browser.defaultBrowserContext();
     await context.overridePermissions(process.env.FB_LOGIN, ["notifications"]);
@@ -55,37 +56,6 @@ let targetDate;
       await page.click('button[data-testid="royal_login_button"]'),
       page.waitForNavigation({ waitUntil: "networkidle0" })
     ]);
-
-    //getting number of followers
-    // authorLink = "https://www.facebook.com/" + source;
-    // await page.goto(authorLink);
-    // await delay(1000);
-    // const authorfollowers = await page.evaluate(async () => {
-    //   let owner = {};
-    //   var delay = (time) => {
-    //     return new Promise(function (resolve) {
-    //       setTimeout(resolve, time);
-    //     });
-    //   };
-    //   window.scrollBy(0, window.innerHeight);
-    //   await delay(1000);
-    //   let infocontainer = document.querySelector(
-    //     "div.rq0escxv.l9j0dhe7.du4w35lb.hybvsw6c.io0zqebd.m5lcvass.fbipl8qg.nwvqtn77.k4urcfbm.ni8dbmo4.stjgntxs.sbcfpzgs"
-    //   );
-    //   let followers = infocontainer.querySelector(
-    //     "span.d2edcug0.hpfvmrgz.qv66sw1b.c1et5uql.lr9zc1uh.jq4qci2q.a3bd9o3v.knj5qynh.oo9gr5id"
-    //   );
-    //   if (followers) {
-    //     followers = followers.innerText.split(" ")[0];
-    //   } else {
-    //     followers = "0";
-    //   }
-    //   owner["followers"] = followers;
-    //   console.log(followers);
-    //   return owner;
-    // });
-    // owner = authorfollowers;
-    // await delay(2000);
 
     //Opening the Facebook Group
     let target = "https://m.facebook.com/" + source;
@@ -109,7 +79,7 @@ let targetDate;
         }else{
           pageFollowers = "0";
         }
-        console.log("page Followers: ",pageFollowers);
+        //console.log("page Followers: ",pageFollowers);
         //I had to rewrite the functions here because this scope does not
         //behave like other scopes in the code as in it cant access anything outside
         //of it's self
@@ -126,13 +96,21 @@ let targetDate;
             temp2 = date.split("/");
             //console.log("post date", temp2);
             let eq;
+            //logic
+            //if year is greater then target than pass
+            //if month is greater than target than pass
+            //if days are greater than or equal target day while monthe and year are the same pass
             if (
-              //months are the same
-              parseInt(temp2[0]) == parseInt(temp1[0]) &&
+              //post year greater than target 
+              parseInt(temp2[2]) > parseInt(temp1[2])||
+              //post month greater than target
+              parseInt(temp2[0]) > parseInt(temp1[0])||
               //post date day is greater than target date day
-              parseInt(temp2[1]) >= parseInt(temp1[1]) &&
-              //years are the same
-              parseInt(temp2[2]) == parseInt(temp1[2])
+              (
+                parseInt(temp2[1]) >= parseInt(temp1[1])&&
+                parseInt(temp2[0]) == parseInt(temp1[0])&&
+                parseInt(temp2[2]) == parseInt(temp1[2])
+              )
             ) {
               eq = true;
             } else {
@@ -331,8 +309,8 @@ let targetDate;
             //scraping post Date
             postDate = postContainer.querySelector("abbr").innerText;
             postDate = calculateDate(postDate).split(",")[0];
-            console.log("date");
-            console.log(postDate);
+            // console.log("date");
+            // console.log(postDate);
 
             //scrapping post caption
             postCaption = postContainer.querySelector(
@@ -344,8 +322,8 @@ let targetDate;
             } else {
               postCaption = "";
             }
-            console.log("caption");
-            console.log(postCaption);
+            // console.log("caption");
+            // console.log(postCaption);
 
             //selecting post footer
             postFooter = article.querySelector("footer");
@@ -443,7 +421,6 @@ let targetDate;
             post = await scrap(count);
             date = post.date.split(",")[0];
             //console.log(targetDate + "..." + date);
-            //console.log(post);
             if (dateGreaterthanorEqual(date, targetDate)) {
               resume = true;
               posts.push(post);
@@ -453,7 +430,7 @@ let targetDate;
             } else {
               resume = false;
             }
-            console.log(resume);
+            //console.log(resume);
           } while (resume);
         } catch (error) {
           console.error();
@@ -489,11 +466,14 @@ let targetDate;
       dates2[1] +
       "-" +
       dates2[2] +
+      "_"+
+      period+
       ".json";
+    
     await storeDataInJSON(savingName, posts);
     console.log("saved scraps in " + savingName);
     //closing the browser
-    await browser.close();
+    //await browser.close();
   } catch (error) {
     console.error(
       "--------------------------\n" +
